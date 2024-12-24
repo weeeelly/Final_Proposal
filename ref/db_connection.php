@@ -2,8 +2,8 @@
 // db_connection.php
 $host = 'localhost';
 $username = 'root';
-$password = '';
-$database = 'speed_enforcement';
+$password = 'willy0310';
+$database = 'final';
 
 $conn = new mysqli($host, $username, $password, $database);
 
