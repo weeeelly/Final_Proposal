@@ -1,9 +1,10 @@
 from flask import Flask, request, jsonify, session, render_template, redirect, flash
 import mysql.connector
 import hashlib
+import os
 
 app = Flask(__name__)
-app.secret_key = "your_secret_key"
+app.secret_key = os.random(24)
 
 # Database Configuration
 db_config = {
