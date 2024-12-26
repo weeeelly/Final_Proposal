@@ -27,6 +27,12 @@ def search():
         return redirect("/")    # 正確重定向到 homepage
     return render_template("search.html")
 
+@app.route('/update', methods=['GET'])
+def update_page():
+    if 'user_id' not in session:
+        flash("請先登入", "warning")
+        return redirect("/")    # 正確重定向到 homepage
+    return render_template("update.html")
 
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -40,7 +46,7 @@ def signup():
         cursor = conn.cursor()
 
         try:
-            query = "INSERT INTO users (username, password) VALUES (%s, %s)"
+            query = "INSERT INTO User (Username, Password) VALUES (%s, %s)"
             cursor.execute(query, (username, hashed_password))
             conn.commit()
             flash("註冊成功！", "success")
@@ -67,7 +73,7 @@ def login():
 
         try:
             # 先檢查用戶是否存在
-            check_user_query = "SELECT Uid FROM users WHERE username = %s"
+            check_user_query = "SELECT Uid FROM User WHERE Username = %s"
             cursor.execute(check_user_query, (username,))
             user_exists = cursor.fetchone()
 
@@ -76,7 +82,7 @@ def login():
                 return redirect("/")  # 返回 homepage
 
             # 驗證密碼
-            login_query = "SELECT Uid FROM users WHERE username = %s AND Password = %s"
+            login_query = "SELECT Uid FROM User WHERE Username = %s AND Password = %s"
             cursor.execute(login_query, (username, hashed_password))
             user = cursor.fetchone()
 
@@ -99,39 +105,66 @@ def logout():
     flash("已登出", "success")
     return redirect("/")
 
-
+@app.route('/search', methods=['GET'])
+def search():
+    if 'user_id' not in session:
+        flash("請先登入", "warning")
+        return redirect("/")
+    return render_template("search.html")
 
 @app.route('/get_cameras', methods=['GET'])
 def get_cameras():
     if 'user_id' not in session:
         return jsonify({"error": "請先登入"}), 401
 
-    CityName = request.args.get('CityName')
-    RegionName = request.args.get('RegionName')
+    city = request.args.get('city')
+    region = request.args.get('region')
 
-    if not CityName or not RegionName:
-        return jsonify({"error": "請提供縣市和區域"}), 400
+    if not city:
+        return jsonify({"error":"請選擇縣市(區域)"}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
-        query = """
-        SELECT 
-            c.Limits, 
-            c.Direct, 
-            c.Addr,
-            p.DeptNm, 
-            p.BranchNm
-        FROM 
-            camera c
-            JOIN ps p ON c.Addr = p.Addr
-        WHERE 
-            p.CityName = %s AND p.RegionName = %s
-        """
-        cursor.execute(query, (CityName, RegionName))
-        results = cursor.fetchall()
-        return jsonify(results)
+        if city and region:
+            query = """
+            SELECT 
+                c.Limits, 
+                c.Direction, 
+                c.Addr,
+                c.City,
+                c.Rigion,
+                p.Deptnm, 
+                p.Branchnm
+            FROM 
+                Camera c
+                JOIN Ps p ON c.Addr = p.Addr
+            WHERE 
+                p.City = %s AND p.Region = %s
+            """
+            cursor.execute(query, (city, region))
+            results = cursor.fetchall()
+            return jsonify(results)
+        else:
+            query = """
+            SELECT 
+                c.Limits, 
+                c.Direction, 
+                c.Addr,
+                c.City,
+                c.Rigion,
+                p.Deptnm, 
+                p.Branchnm
+            FROM 
+                Camera c
+                JOIN Ps p ON c.Addr = p.Addr
+            WHERE 
+                p.City = %s
+            """
+            cursor.execute(query, (city))
+            results = cursor.fetchall()
+            return jsonify(results)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
@@ -163,7 +196,7 @@ def update_camera():
     try:
         # 更新速限
         update_query = """
-        UPDATE camera
+        UPDATE Camera
         SET Limits = %s
         WHERE Addr = %s
         """
@@ -171,7 +204,7 @@ def update_camera():
 
         # 記錄更新
         log_query = """
-        INSERT INTO `Update` (Uid, Addr)
+        INSERT INTO `Update` (Uid, Address)
         VALUES (%s, %s)
         """
         cursor.execute(log_query, (session['user_id'], Addr))
@@ -196,17 +229,17 @@ def get_update_history():
     try:
         query = """
         SELECT 
-            p.CityName,
-            p.RegionName,
+            p.City,
+            p.Region,
             c.Addr,
             c.Limits,
-            c.Direct
+            c.Direction
         FROM 
-            records r
-            JOIN camera c ON u.Addr = c.Addr
-            JOIN ps p ON c.Addr = p.Addr
+            `Update` u
+            JOIN Camera c ON u.Address = c.Addr
+            JOIN Ps p ON c.Addr = p.Addr
         WHERE 
-            r.Uid = %s
+            u.Uid = %s
         ORDER BY 
             c.Addr
         """
