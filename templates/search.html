@@ -112,15 +112,15 @@
 </head>
 <body>
     <div class="header">
-        <h1>Search Speed Camera</h1>
+        <h1>Search Speed Camera</h1>1
     </div>
 
     <div class="search-box">
-        <select id="citySelect" class="form-control">
+        <select id="citySelect" class="form-control" name="city">
             <option value="">選擇縣市</option>
         </select>
         
-        <select id="districtSelect" class="form-control">
+        <select id="districtSelect" class="form-control" name="region">
             <option value="">選擇地區</option>
         </select>
     </div>
@@ -270,7 +270,7 @@
             const confirmButton = document.getElementById('confirmButton');
             
             // 只有當縣市和地區都選擇時才啟用按鈕
-            confirmButton.disabled = !(citySelect.value && districtSelect.value);
+            confirmButton.disabled = !(citySelect.value);
         }
 
         // 搜尋測速照相機
@@ -280,13 +280,15 @@
             const cameraTable = document.getElementById('cameraTable');
             const cameraTableBody = document.getElementById('cameraTableBody');
 
-            if (!citySelect.value || !districtSelect.value) {
-                alert('請選擇縣市和地區');
+            if (!citySelect.value) {
+                alert('請選擇縣市');
                 return;
             }
 
-            const url = `/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`;
-
+            let url = `/get_cameras?CityName=${encodeURIComponent(citySelect.value)}`;
+            if(districtSelect.value){
+                url += `&RegionName=${encodeURIComponent(districtSelect.value)}`;
+            }
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
