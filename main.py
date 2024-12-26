@@ -167,45 +167,126 @@ def update_page():
         return redirect("/")
     return render_template("update.html")
 
-@app.route('/update_camera', methods=['POST'])
-def update_camera():
-    if 'user_id' not in session:
-        return jsonify({"error": "請先登入"}), 401
+@app.route('/add_camera', methods=['POST'])
+def add_camera():
 
     data = request.json
-    Addr = data.get('Addr')
-    new_limit = data.get('new_limit')
+    city = data.get('CityName')
+    region = data.get('RegionName')
+    addr = data.get('Addr')
+    limits = data.get('Limits')
+    direction = data.get('Direct')
 
-    if not Addr or not new_limit:
-        return jsonify({"error": "請提供地址和新速限"}), 400
+    if not city or not region or not addr or not limits or not direction:
+        flash("請提供完整的測速照相地點資訊", "danger")
+        return redirect("/update")
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # 更新速限
-        update_query = """
-        UPDATE camera
-        SET Limits = %s
-        WHERE Addr = %s
+        insert_query = """
+        INSERT INTO Camera (CityName, RegionName, Addr, Limits, Direct)
+        VALUES (%s, %s, %s, %s, %s)
         """
-        cursor.execute(update_query, (new_limit, Addr))
+        cursor.execute(insert_query, (city, region, addr, limits, direction))
 
-        # 記錄更新
         log_query = """
-        INSERT INTO `Update` (Uid, Addr)
+        INSERT INTO Update (Uid, Addr)
         VALUES (%s, %s)
         """
-        cursor.execute(log_query, (session['user_id'], Addr))
+        cursor.execute(log_query, (session['user_id'], addr))
         
         conn.commit()
-        return jsonify({"message": "更新成功"})
+        flash("新增成功", "success")
+        return redirect("/update")
     except Exception as e:
         conn.rollback()
-        return jsonify({"error": str(e)}), 500
+        flash(f"新增失敗: {str(e)}", "danger")
+        return redirect("/update")
     finally:
         cursor.close()
         conn.close()
+
+@app.route('/delete_camera', methods=['POST'])
+def delete_camera():
+
+    data = request.json
+    addr = data.get('Addr')
+
+    if not addr:
+        flash("請提供地址", "danger")
+        return redirect("/update")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        delete_query = """
+        DELETE FROM Camera
+        WHERE Addr = %s
+        """
+        cursor.execute(delete_query, (addr,))
+
+        log_query = """
+        INSERT INTO Update (Uid, Addr)
+        VALUES (%s, %s)
+        """
+        cursor.execute(log_query, (session['user_id'], addr))
+        
+        conn.commit()
+        flash("刪除成功", "success")
+        return redirect("/update")
+    except Exception as e:
+        conn.rollback()
+        flash(f"刪除失敗: {str(e)}", "danger")
+        return redirect("/update")
+    finally:
+        cursor.close()
+        conn.close()
+
+@app.route('/update_camera', methods=['POST'])
+def update_camera():
+    if 'user_id' not in session:
+        flash("請先登入", "warning")
+        return redirect("/update")
+
+    data = request.json
+    addr = data.get('Addr')
+    new_limit = data.get('new_limit')
+
+    if not addr or not new_limit:
+        flash("請提供地址和新速限", "danger")
+        return redirect("/update")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        update_query = """
+        UPDATE Camera
+        SET Limits = %s
+        WHERE Addr = %s
+        """
+        cursor.execute(update_query, (new_limit, addr))
+
+        log_query = """
+        INSERT INTO Update (Uid, Addr)
+        VALUES (%s, %s)
+        """
+        cursor.execute(log_query, (session['user_id'], addr))
+        
+        conn.commit()
+        flash("更新成功", "success")
+        return redirect("/update")
+    except Exception as e:
+        conn.rollback()
+        flash(f"更新失敗: {str(e)}", "danger")
+        return redirect("/update")
+    finally:
+        cursor.close()
+        conn.close()
+
 
 @app.route('/update_history', methods=['GET'])
 def get_update_history():
@@ -239,5 +320,5 @@ def get_update_history():
         cursor.close()
         conn.close()
 
-if __name__ == '__main__':
+if __name__ == '_main_':
     app.run(debug=True)
