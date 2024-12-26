@@ -233,7 +233,16 @@
             // 監聽縣市選擇變更
             citySelect.addEventListener('change', function() {
                 updateDistricts(this.value);
+                toggleConfirmButton();
             });
+
+            // 監聽地區選擇變更
+            districtSelect.addEventListener('change', function() {
+                toggleConfirmButton();
+            });
+
+            // 初始禁用確認按鈕
+            confirmButton.disabled = true;
         }
 
         // 更新地區下拉選單
@@ -254,6 +263,16 @@
             document.getElementById('cameraTable').style.display = 'none';
         }
 
+        // 切換確認按鈕的啟用狀態
+        function toggleConfirmButton() {
+            const citySelect = document.getElementById('citySelect');
+            const districtSelect = document.getElementById('districtSelect');
+            const confirmButton = document.getElementById('confirmButton');
+            
+            // 只有當縣市和地區都選擇時才啟用按鈕
+            confirmButton.disabled = !(citySelect.value && districtSelect.value);
+        }
+
         // 搜尋測速照相機
         function searchCameras() {
             const citySelect = document.getElementById('citySelect');
@@ -261,34 +280,36 @@
             const cameraTable = document.getElementById('cameraTable');
             const cameraTableBody = document.getElementById('cameraTableBody');
 
-            if (!citySelect.value) {
-                alert('請選擇縣市');
+            if (!citySelect.value || !districtSelect.value) {
+                alert('請選擇縣市和地區');
                 return;
             }
 
-            let url = `/get_cameras?CityName=${encodeURIComponent(citySelect.value)}`;
-            if (districtSelect.value) {
-                url += `&RegionName=${encodeURIComponent(districtSelect.value)}`;
-            }
+            const url = `/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`;
 
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
                     cameraTableBody.innerHTML = '';
                     
-                    data.forEach(camera => {
+                    if (data.length === 0) {
                         const row = document.createElement('tr');
-                        row.innerHTML = `
-                            <td>${camera.Addr}</td>
-                            <td>${camera.Limits} km/h</td>
-                            <td>${camera.Direct}</td>
-                            <td>${camera.DeptNm}</td>
-                            <td>${camera.BranchNm}</td>
-                        `;
+                        row.innerHTML = '<td colspan="5" style="text-align: center;">查無資料</td>';
                         cameraTableBody.appendChild(row);
-                    });
+                    } else {
+                        data.forEach(camera => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${camera.Addr}</td>
+                                <td>${camera.Limits} km/h</td>
+                                <td>${camera.Direct}</td>
+                                <td>${camera.DeptNm}</td>
+                                <td>${camera.BranchNm}</td>
+                            `;
+                            cameraTableBody.appendChild(row);
+                        });
+                    }
                     
-                    // 顯示表格
                     cameraTable.style.display = 'table';
                 })
                 .catch(error => {
