@@ -106,8 +106,8 @@ def get_cameras():
     if 'user_id' not in session:
         return jsonify({"error": "請先登入"}), 401
 
-    city = request.args.get('city')
-    region = request.args.get('region')
+    city = request.args.get('citySelect')
+    region = request.args.get('districtSelect')
 
     if not city:
         return jsonify({"error":"請選擇縣市(區域)"}), 400
@@ -125,10 +125,10 @@ def get_cameras():
                 p.DeptNm, 
                 p.BranchNm
             FROM 
-                Camera c
-                JOIN Ps p ON c.Addr = p.Addr
+                camera c
+                JOIN ps p ON c.Addr = p.Addr
             WHERE 
-                p.City = %s AND p.Region = %s
+                p.CityName = %s AND p.RegionName = %s
             ORDER BY
                 c.Addr desc
             """
@@ -141,13 +141,13 @@ def get_cameras():
                 c.Limits, 
                 c.Direct, 
                 c.Addr,
-                p.Deptnm, 
-                p.Branchnm
+                p.DeptNm, 
+                p.BranchNm
             FROM 
-                Camera c
-                JOIN Ps p ON c.Addr = p.Addr
+                camera c
+                JOIN ps p ON c.Addr = p.Addr
             WHERE 
-                p.City = %s
+                p.CityName = %s
             ORDER BY
                 c.Addr desc
             """
