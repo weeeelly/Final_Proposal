@@ -25,16 +25,19 @@
         .search-box {
             margin: 2rem auto;
             text-align: center;
-            width: 80%;
-            max-width: 600px;
+            width: 90%;
+            max-width: 1200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
         }
 
-        .search-box select {
+        .search-box select, .search-box input {
             width: 200px;
             padding: 0.8rem;
             border: 1px solid #ddd;
             border-radius: 4px;
-            margin: 0.5rem;
             font-size: 1rem;
         }
 
@@ -64,12 +67,10 @@
 
         #cameraSelect {
             width: 400px;
-            margin-top: 1rem;
             padding: 0.8rem;
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 1rem;
-            display: none;
         }
 
         .results-section {
@@ -77,6 +78,33 @@
             text-align: center;
             width: 80%;
             max-width: 600px;
+        }
+
+        #newLimit {
+            width: 100px;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .update-button {
+            padding: 0.8rem 1.5rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .update-button:hover {
+            background-color: #45a049;
+        }
+
+        .update-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -93,12 +121,46 @@
         <select id="districtSelect" class="form-control">
             <option value="">選擇地區</option>
         </select>
-    </div>
 
-    <div class="results-section">
         <select id="cameraSelect" class="form-control">
             <option value="">選擇測速照相機位置</option>
         </select>
+
+        <input type="number" id="newLimit" placeholder="新速限" min="0" max="120">
+        
+        <button class="update-button" onclick="updateCamera()" id="updateButton" disabled>更新</button>
+    </div>
+
+    <div class="search-box" style="margin-top: 0;">
+        <select id="addCitySelect" class="form-control">
+            <option value="">選擇縣市</option>
+        </select>
+        
+        <select id="addDistrictSelect" class="form-control">
+            <option value="">選擇地區</option>
+        </select>
+
+        <input type="text" id="newAddr" placeholder="輸入地址" class="form-control">
+        <input type="number" id="newSpeedLimit" placeholder="速限" min="0" max="120" class="form-control" style="width: 100px;">
+        <input type="text" id="newDirection" placeholder="方向" class="form-control" style="width: 100px;">
+        
+        <button class="update-button" onclick="addCamera()" id="addButton" disabled>新增</button>
+    </div>
+
+    <div class="search-box" style="margin-top: 0;">
+        <select id="deleteCitySelect" class="form-control">
+            <option value="">選擇縣市</option>
+        </select>
+        
+        <select id="deleteDistrictSelect" class="form-control">
+            <option value="">選擇地區</option>
+        </select>
+
+        <select id="deleteAddressSelect" class="form-control">
+            <option value="">選擇地址</option>
+        </select>
+        
+        <button class="update-button" onclick="deleteCamera()" id="deleteButton" disabled>刪除</button>
     </div>
 
     <div class="button-section">
@@ -127,7 +189,7 @@
         '東區', '北區', '香山區'
     ],
     '苗栗縣': [
-        '苗栗市', '通霄鎮', '苑裡鎮', '竹南鎮', '頭份鎮', '後龍鎮', '卓蘭鎮', '西湖鄉', '頭屋鄉', '公館鄉', '銅鑼鄉', '三義鄉', '造橋鄉', '三灣鄉', '南庄鄉', '大湖鄉', '獅潭鄉', '泰安鄉'
+        '苗栗市', '通霄鎮', '苑裡鎮', '竹南鎮', '頭份鎮', '後龍鎮', '卓蘭鎮', '西湖鄉', '頭屋鄉', '公館鄉', '銅鑼鄉', '三義鄉', '造橋鄉', '三灣鄉', '南庄鄉', '大湖鄉', '獅潭���', '泰安鄉'
     ],
     '臺中市': [
         '中區', '東區', '南區', '西區', '北區', '北屯區', '西屯區', '南屯區', '太平區', '大里區', '霧峰區', '烏日區', '豐原區', '后里區', '東勢區', '石岡區', '新社區', '和平區', '神岡區', '潭子區', '大雅區', '大肚區', '龍井區', '沙鹿區', '梧棲區', '清水區', '大甲區', '外埔區', '大安區'
@@ -163,7 +225,7 @@
         '花蓮市', '鳳林鎮', '玉里鎮', '新城鄉', '吉安鄉', '壽豐鄉', '秀林鄉', '光復鄉', '豐濱鄉', '瑞穗鄉', '萬榮鄉', '富里鄉', '卓溪鄉'
     ],
     '臺東縣': [
-        '臺東市', '成功鎮', '關山鎮', '長濱鄉', '海端鄉', '池上鄉', '東河鄉', '鹿野鄉', '延平鄉', '卑南鄉', '金峰鄉', '大武鄉', '達仁鄉', '綠島鄉', '蘭嶼鄉', '太麻里鄉'
+        '臺東市', '成功鎮', '關山鎮', '長濱鄉', '海端鄉', '池上鄉', '東河鄉', '鹿野鄉', '延平鄉', '卑南鄉', '金峰鄉', '大武鄉', '達仁鄉', '綠島鄉', '蘭嶼鄉', '太麻里'
     ],
     '澎湖縣': [
         '馬公市', '湖西鄉', '白沙鄉', '西嶼鄉', '望安鄉', '七美鄉'
@@ -176,27 +238,69 @@
     ]
         };
 
-        // 初始化下拉選單
+        // 初始化所有下拉選單
         function initializeSelects() {
             const citySelect = document.getElementById('citySelect');
+            const districtSelect = document.getElementById('districtSelect');
+            const cameraSelect = document.getElementById('cameraSelect');
+            const updateButton = document.getElementById('updateButton');
+            const addCitySelect = document.getElementById('addCitySelect');
             
-            // 加入縣市選項
+            // 加入縣市選項到兩個下拉選單
             Object.keys(taiwanCities).forEach(city => {
-                const option = document.createElement('option');
-                option.value = city;
-                option.textContent = city;
-                citySelect.appendChild(option);
+                // 更新用的縣市選單
+                const option1 = document.createElement('option');
+                option1.value = city;
+                option1.textContent = city;
+                citySelect.appendChild(option1);
+
+                // 新增用的縣市選單
+                const option2 = document.createElement('option');
+                option2.value = city;
+                option2.textContent = city;
+                addCitySelect.appendChild(option2);
             });
 
-            // 監聽縣市選擇變更
+            // 監聽更新用的縣市選擇變更
             citySelect.addEventListener('change', function() {
-                updateDistricts(this.value);
+                updateDistricts(this.value, 'districtSelect');
+                toggleUpdateButton();
             });
+
+            // 監聽新增用的縣市選擇變更
+            addCitySelect.addEventListener('change', function() {
+                updateDistricts(this.value, 'addDistrictSelect');
+                toggleAddButton();
+            });
+
+            // 監聽新增表單的輸入變更
+            document.getElementById('addDistrictSelect').addEventListener('change', toggleAddButton);
+            document.getElementById('newAddr').addEventListener('input', toggleAddButton);
+            document.getElementById('newSpeedLimit').addEventListener('input', toggleAddButton);
+            document.getElementById('newDirection').addEventListener('input', toggleAddButton);
         }
 
-        // 更新地區下拉選單
-        function updateDistricts(selectedCity) {
+        // 切換更新按鈕狀態
+        function toggleUpdateButton() {
+            const citySelect = document.getElementById('citySelect');
             const districtSelect = document.getElementById('districtSelect');
+            const cameraSelect = document.getElementById('cameraSelect');
+            const newLimit = document.getElementById('newLimit');
+            const updateButton = document.getElementById('updateButton');
+
+            updateButton.disabled = !(
+                citySelect.value && 
+                districtSelect.value && 
+                cameraSelect.value && 
+                newLimit.value && 
+                newLimit.value >= 0 && 
+                newLimit.value <= 120
+            );
+        }
+
+        // Update districts dropdown based on selected city
+        function updateDistricts(selectedCity, districtSelectId) {
+            const districtSelect = document.getElementById(districtSelectId);
             districtSelect.innerHTML = '<option value="">選擇地區</option>';
             
             if (selectedCity && taiwanCities[selectedCity]) {
@@ -207,10 +311,32 @@
                     districtSelect.appendChild(option);
                 });
             }
-            // 清空並隱藏測速照相機選單
-            const cameraSelect = document.getElementById('cameraSelect');
-            cameraSelect.innerHTML = '<option value="">選擇測速照相機位置</option>';
-            cameraSelect.style.display = 'none';
+        }
+
+        // Update camera locations dropdown based on selected city and district
+        function updateCameraLocations(citySelectId, districtSelectId, cameraSelectId) {
+            const citySelect = document.getElementById(citySelectId);
+            const districtSelect = document.getElementById(districtSelectId);
+            const cameraSelect = document.getElementById(cameraSelectId);
+
+            if (citySelect.value && districtSelect.value) {
+                fetch(`/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        cameraSelect.innerHTML = '<option value="">選擇測速照相機位置</option>';
+                        
+                        data.forEach(camera => {
+                            const option = document.createElement('option');
+                            option.value = camera.Addr;
+                            option.textContent = `${camera.Addr} - 速限:${camera.Limits}km/h - 方向:${camera.Direct}`;
+                            cameraSelect.appendChild(option);
+                        });
+                        
+                        // Show the camera select dropdown
+                        cameraSelect.style.display = 'block';
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
         }
 
         // 當選擇地區時獲取測速照相機數據
@@ -239,8 +365,167 @@
             }
         });
 
-        // 當網頁載入時初始化
-        document.addEventListener('DOMContentLoaded', initializeSelects);
+        // 切換新增按鈕狀態
+        function toggleAddButton() {
+            const citySelect = document.getElementById('addCitySelect');
+            const districtSelect = document.getElementById('addDistrictSelect');
+            const addr = document.getElementById('newAddr');
+            const speedLimit = document.getElementById('newSpeedLimit');
+            const direction = document.getElementById('newDirection');
+            const addButton = document.getElementById('addButton');
+
+            addButton.disabled = !(
+                citySelect.value && 
+                districtSelect.value && 
+                addr.value.trim() && 
+                speedLimit.value && 
+                speedLimit.value >= 0 && 
+                speedLimit.value <= 120 &&
+                direction.value.trim()
+            );
+        }
+
+        // 新增測速照相機
+        function addCamera() {
+            const data = {
+                CityName: document.getElementById('addCitySelect').value,
+                RegionName: document.getElementById('addDistrictSelect').value,
+                Addr: document.getElementById('newAddr').value.trim(),
+                Limits: document.getElementById('newSpeedLimit').value,
+                Direct: document.getElementById('newDirection').value.trim()
+            };
+
+            fetch('/add_camera', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('新增成功！');
+                    // 清空輸入欄位
+                    document.getElementById('newAddr').value = '';
+                    document.getElementById('newSpeedLimit').value = '';
+                    document.getElementById('newDirection').value = '';
+                    // 重新禁用按鈕
+                    document.getElementById('addButton').disabled = true;
+                    // 重新載入測速照相機列表
+                    if (document.getElementById('districtSelect').value) {
+                        fetchCameras();
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('發生錯誤，請稍後再試');
+            });
+        }
+
+        // Initialize delete selects
+        function initializeDeleteSelects() {
+            const deleteCitySelect = document.getElementById('deleteCitySelect');
+            const deleteDistrictSelect = document.getElementById('deleteDistrictSelect');
+
+            // Add city options to delete city select
+            Object.keys(taiwanCities).forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                deleteCitySelect.appendChild(option);
+            });
+
+            // Listen for changes in delete city select
+            deleteCitySelect.addEventListener('change', function() {
+                updateDistricts(this.value, 'deleteDistrictSelect');
+                toggleDeleteButton();
+            });
+
+            // Listen for changes in delete district select
+            deleteDistrictSelect.addEventListener('change', function() {
+                updateAddresses();
+                toggleDeleteButton();
+            });
+
+            // Listen for changes in delete address select
+            document.getElementById('deleteAddressSelect').addEventListener('change', toggleDeleteButton);
+        }
+
+        // Update addresses dropdown
+        function updateAddresses() {
+            const citySelect = document.getElementById('deleteCitySelect');
+            const districtSelect = document.getElementById('deleteDistrictSelect');
+            const addressSelect = document.getElementById('deleteAddressSelect');
+
+            if (citySelect.value && districtSelect.value) {
+                fetch(`/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        addressSelect.innerHTML = '<option value="">選擇地址</option>';
+                        
+                        data.forEach(camera => {
+                            const option = document.createElement('option');
+                            option.value = camera.Addr;
+                            option.textContent = `${camera.Addr} - 速限:${camera.Limits}km/h - 方向:${camera.Direct}`;
+                            addressSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        }
+
+        // Toggle delete button state
+        function toggleDeleteButton() {
+            const citySelect = document.getElementById('deleteCitySelect');
+            const districtSelect = document.getElementById('deleteDistrictSelect');
+            const addressSelect = document.getElementById('deleteAddressSelect');
+            const deleteButton = document.getElementById('deleteButton');
+
+            deleteButton.disabled = !(citySelect.value && districtSelect.value && addressSelect.value);
+        }
+
+        // Delete camera
+        function deleteCamera() {
+            const data = {
+                CityName: document.getElementById('deleteCitySelect').value,
+                RegionName: document.getElementById('deleteDistrictSelect').value,
+                Addr: document.getElementById('deleteAddressSelect').value
+            };
+
+            fetch('/delete_camera', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('刪除成功！');
+                    // Reload addresses
+                    updateAddresses();
+                    // Disable delete button
+                    document.getElementById('deleteButton').disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('發生錯誤，請稍後再試');
+            });
+        }
+
+        // Initialize all selects on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSelects();
+            initializeDeleteSelects();
+        });
     </script>
 </body>
 </html>
