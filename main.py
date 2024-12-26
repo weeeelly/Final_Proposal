@@ -106,32 +106,54 @@ def get_cameras():
     if 'user_id' not in session:
         return jsonify({"error": "請先登入"}), 401
 
-    CityName = request.args.get('CityName')
-    RegionName = request.args.get('RegionName')
+    city = request.args.get('city')
+    region = request.args.get('region')
 
-    if not CityName or not RegionName:
-        return jsonify({"error": "請提供縣市和區域"}), 400
+    if not city:
+        return jsonify({"error":"請選擇縣市(區域)"}), 400
 
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     try:
-        query = """
-        SELECT 
-            c.Limits, 
-            c.Direct, 
-            c.Addr,
-            p.DeptNm, 
-            p.BranchNm
-        FROM 
-            camera c
-            JOIN ps p ON c.Addr = p.Addr
-        WHERE 
-            p.CityName = %s AND p.RegionName = %s
-        """
-        cursor.execute(query, (CityName, RegionName))
-        results = cursor.fetchall()
-        return jsonify(results)
+        if city and region:
+            query = """
+            SELECT 
+                c.Limits, 
+                c.Direct, 
+                c.Addr,
+                p.DeptNm, 
+                p.BranchNm
+            FROM 
+                Camera c
+                JOIN Ps p ON c.Addr = p.Addr
+            WHERE 
+                p.City = %s AND p.Region = %s
+            ORDER BY
+                c.Addr desc
+            """
+            cursor.execute(query, (city, region))
+            results = cursor.fetchall()
+            return jsonify(results)
+        else:
+            query = """
+            SELECT 
+                c.Limits, 
+                c.Direct, 
+                c.Addr,
+                p.Deptnm, 
+                p.Branchnm
+            FROM 
+                Camera c
+                JOIN Ps p ON c.Addr = p.Addr
+            WHERE 
+                p.City = %s
+            ORDER BY
+                c.Addr desc
+            """
+            cursor.execute(query, (city))
+            results = cursor.fetchall()
+            return jsonify(results)
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     finally:
