@@ -60,6 +60,11 @@
         .button-section button:hover {
             background-color: #45a049;
         }
+
+        .flash-messages .warning {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
@@ -71,11 +76,21 @@
         <img src="IMG_8262.JPG" alt="圖片描述">
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+                <div class="{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
     <div class="button-section">
-        <button onclick="window.location.href='login.html'">Login</button>
-        <button onclick="window.location.href='signup.html'">Sign Up</button>
-        <button onclick="window.location.href='update.html'">Update</button>
-        <button onclick="window.location.href='search.html'">Search</button>
+        <button onclick="window.location.href='/login'">Login</button>
+        <button onclick="window.location.href='/signup'">Sign Up</button>
+        <button onclick="window.location.href='/update'">Update</button>
+        <button onclick="window.location.href='/search'">Search</button>
     </div>
 </body>
 </html>
