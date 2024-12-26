@@ -112,7 +112,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>Search Speed Camera</h1>1
+        <h1>Search Speed Camera</h1>
     </div>
 
     <div class="search-box">
@@ -285,10 +285,8 @@
                 return;
             }
 
-            let url = `/get_cameras?CityName=${encodeURIComponent(citySelect.value)}`;
-            if(districtSelect.value){
-                url += `&RegionName=${encodeURIComponent(districtSelect.value)}`;
-            }
+            const url = `/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`;
+            
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
