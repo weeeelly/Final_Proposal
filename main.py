@@ -187,13 +187,13 @@ def add_camera():
 
     try:
         insert_query = """
-        INSERT INTO Camera (CityName, RegionName, Addr, Limits, Direct)
+        INSERT INTO camera (CityName, RegionName, Addr, Limits, Direct)
         VALUES (%s, %s, %s, %s, %s)
         """
         cursor.execute(insert_query, (city, region, addr, limits, direction))
 
         log_query = """
-        INSERT INTO Update (Uid, Addr)
+        INSERT INTO records (Uid, Addr)
         VALUES (%s, %s)
         """
         cursor.execute(log_query, (session['user_id'], addr))
@@ -224,13 +224,13 @@ def delete_camera():
 
     try:
         delete_query = """
-        DELETE FROM Camera
+        DELETE FROM camera
         WHERE Addr = %s
         """
         cursor.execute(delete_query, (addr,))
 
         log_query = """
-        INSERT INTO Update (Uid, Addr)
+        INSERT INTO records (Uid, Addr)
         VALUES (%s, %s)
         """
         cursor.execute(log_query, (session['user_id'], addr))
@@ -265,14 +265,14 @@ def update_camera():
 
     try:
         update_query = """
-        UPDATE Camera
+        UPDATE camera
         SET Limits = %s
         WHERE Addr = %s
         """
         cursor.execute(update_query, (new_limit, addr))
 
         log_query = """
-        INSERT INTO Update (Uid, Addr)
+        INSERT INTO records (Uid, Addr)
         VALUES (%s, %s)
         """
         cursor.execute(log_query, (session['user_id'], addr))
