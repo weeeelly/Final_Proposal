@@ -61,6 +61,23 @@
         .button-section button:hover {
             background-color: #45a049;
         }
+
+        #cameraSelect {
+            width: 400px;
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            display: none;
+        }
+
+        .results-section {
+            margin: 2rem auto;
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+        }
     </style>
 </head>
 <body>
@@ -75,6 +92,12 @@
         
         <select id="districtSelect" class="form-control">
             <option value="">選擇地區</option>
+        </select>
+    </div>
+
+    <div class="results-section">
+        <select id="cameraSelect" class="form-control">
+            <option value="">選擇測速照相機位置</option>
         </select>
     </div>
 
@@ -184,7 +207,37 @@
                     districtSelect.appendChild(option);
                 });
             }
+            // 清空並隱藏測速照相機選單
+            const cameraSelect = document.getElementById('cameraSelect');
+            cameraSelect.innerHTML = '<option value="">選擇測速照相機位置</option>';
+            cameraSelect.style.display = 'none';
         }
+
+        // 當選擇地區時獲取測速照相機數據
+        document.getElementById('districtSelect').addEventListener('change', function() {
+            const citySelect = document.getElementById('citySelect');
+            const districtSelect = document.getElementById('districtSelect');
+            const cameraSelect = document.getElementById('cameraSelect');
+
+            if (citySelect.value && districtSelect.value) {
+                fetch(`/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        cameraSelect.innerHTML = '<option value="">選擇測速照相機位置</option>';
+                        
+                        data.forEach(camera => {
+                            const option = document.createElement('option');
+                            option.value = camera.Addr;
+                            option.textContent = `${camera.Addr} - 速限:${camera.Limits}km/h - 方向:${camera.Direct}`;
+                            cameraSelect.appendChild(option);
+                        });
+                        
+                        // 顯示測速照相機選單
+                        cameraSelect.style.display = 'block';
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
 
         // 當網頁載入時初始化
         document.addEventListener('DOMContentLoaded', initializeSelects);
