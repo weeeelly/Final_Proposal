@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜尋地區</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+
+        .header {
+            background-color: #333;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .search-box {
+            margin: 2rem auto;
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        .search-box select {
+            width: 200px;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .button-section {
+            margin-top: auto;
+            text-align: center;
+            padding: 2rem;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .button-section button {
+            padding: 1rem 2rem;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.1rem;
+        }
+
+        .button-section button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button-section button:hover:enabled {
+            background-color: #45a049;
+        }
+
+        #cameraSelect {
+            width: 400px;
+            margin-top: 1rem;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+            display: none;
+        }
+
+        .results-section {
+            margin: 2rem auto;
+            width: 80%;
+            max-width: 800px;
+        }
+
+        .camera-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .camera-table th, .camera-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .camera-table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .camera-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .camera-table tr:hover {
+            background-color: #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Search Speed Camera</h1>
+    </div>
+
+    <div class="search-box">
+        <select id="citySelect" class="form-control" name="city">
+            <option value="">選擇縣市</option>
+        </select>
+        
+        <select id="districtSelect" class="form-control" name="region">
+            <option value="">選擇地區</option>
+        </select>
+    </div>
+
+    <div class="results-section">
+        <table class="camera-table" id="cameraTable">
+            <thead>
+                <tr>
+                    <th>地址</th>
+                    <th>速限</th>
+                    <th>方向</th>
+                    <th>管理單位</th>
+                    <th>分局</th>
+                </tr>
+            </thead>
+            <tbody id="cameraTableBody">
+            </tbody>
+        </table>
+    </div>
+
+    <div class="button-section">
+        <button id="confirmButton" onclick="searchCameras()">Confirm</button>
+        <button onclick="window.location.href='/'">Home</button>
+    </div>
+
+    <script>
+        // 台灣縣市資料
+        const taiwanCities = {
+            '臺北市': [
+        '中正區', '大同區', '中山區', '萬華區', '信義區', '松山區', '大安區', '南港區', '北投區', '內湖區', '士林區', '文山區'
+    ],
+    '新北市': [
+        '板橋區', '新莊區', '泰山區', '林口區', '淡水區', '金山區', '八里區', '萬里區', '石門區', '三芝區', '瑞芳區', '汐止區', '平溪區', '貢寮區', '雙溪區', '深坑區', '石碇區', '新店區', '坪林區', '烏來區', '中和區', '永和區', '土城區', '三峽區', '樹林區', '鶯歌區', '三重區', '蘆洲區', '五股區'
+    ],
+    '基隆市': [
+        '仁愛區', '中正區', '信義區', '中山區', '安樂區', '暖暖區', '七堵區'
+    ],
+    '桃園市': [
+        '桃園區', '中壢區', '平鎮區', '八德區', '楊梅區', '蘆竹區', '龜山區', '龍潭區', '大溪區', '大園區', '觀音區', '新屋區', '復興區'
+    ],
+    '新竹縣': [
+        '竹北市', '竹東鎮', '新埔鎮', '關西鎮', '峨眉鄉', '寶山鄉', '北埔鄉', '橫山鄉', '芎林鄉', '湖口鄉', '新豐鄉', '尖石鄉', '五峰鄉'
+    ],
+    '新竹市': [
+        '東區', '北區', '香山區'
+    ],
+    '苗栗縣': [
+        '苗栗市', '通霄鎮', '苑裡鎮', '竹南鎮', '頭份鎮', '後龍鎮', '卓蘭鎮', '西湖鄉', '頭屋鄉', '公館鄉', '銅鑼鄉', '三義鄉', '造橋鄉', '三灣鄉', '南庄鄉', '大湖鄉', '獅潭鄉', '泰安鄉'
+    ],
+    '臺中市': [
+        '中區', '東區', '南區', '西區', '北區', '北屯區', '西屯區', '南屯區', '太平區', '大里區', '霧峰區', '烏日區', '豐原區', '后里區', '東勢區', '石岡區', '新社區', '和平區', '神岡區', '潭子區', '大雅區', '大肚區', '龍井區', '沙鹿區', '梧棲區', '清水區', '大甲區', '外埔區', '大安區'
+    ],
+    '南投縣': [
+        '南投市', '埔里鎮', '草屯鎮', '竹山鎮', '集集鎮', '名間鄉', '鹿谷鄉', '中寮鄉', '魚池鄉', '國姓鄉', '水里鄉', '信義鄉', '仁愛鄉'
+    ],
+    '彰化縣': [
+        '彰化市', '員林鎮', '和美鎮', '鹿港鎮', '溪湖鎮', '二林鎮', '田中鎮', '北斗鎮', '花壇鄉', '芬園鄉', '大村鄉', '永靖鄉', '伸港鄉', '線西鄉', '福興鄉', '秀水鄉', '埔心鄉', '埔鹽鄉', '大城鄉', '芳苑鄉', '竹塘鄉', '社頭鄉', '二水鄉', '田尾鄉', '埤頭鄉', '溪州鄉'
+    ],
+    '雲林縣': [
+        '斗六市', '斗南鎮', '虎尾鎮', '西螺鎮', '土庫鎮', '北港鎮', '莿桐鄉', '林內鄉', '古坑鄉', '大埤鄉', '崙背鄉', '二崙鄉', '麥寮鄉', '臺西鄉', '東勢鄉', '褒忠鄉', '四湖鄉', '口湖鄉', '水林鄉', '元長鄉'
+    ],
+    '嘉義縣': [
+        '太保市', '朴子市', '布袋鎮', '大林鎮', '民雄鄉', '溪口鄉', '新港鄉', '六腳鄉', '東石鄉', '義竹鄉', '鹿草鄉', '水上鄉', '中埔鄉', '竹崎鄉', '梅山鄉', '番路鄉', '大埔鄉', '阿里山鄉'
+    ],
+    '嘉義市': [
+        '東區', '西區'
+    ],
+    '臺南市': [
+        '中西區', '東區', '南區', '北區', '安平區', '安南區', '永康區', '歸仁區', '新化區', '左鎮區', '玉井區', '楠西區', '南化區', '仁德區', '關廟區', '龍崎區', '官田區', '麻豆區', '佳里區', '西港區', '七股區', '將軍區', '學甲區', '北門區', '新營區', '後壁區', '白河區', '東山區', '六甲區', '下營區', '柳營區', '鹽水區', '善化區', '大內區', '山上區', '新市區', '安定區'
+    ],
+    '高雄市': [
+        '楠梓區', '左營區', '鼓山區', '三民區', '鹽埕區', '前金區', '新興區', '苓雅區', '前鎮區', '小港區', '旗津區', '鳳山區', '大寮區', '鳥松區', '林園區', '仁武區', '大樹區', '大社區', '岡山區', '路竹區', '橋頭區', '梓官區', '彌陀區', '永安區', '燕巢區', '田寮區', '阿蓮區', '茄萣區', '湖內區', '旗山區', '美濃區', '內門區', '杉林區', '甲仙區', '六龜區', '茂林區', '桃源區', '那瑪夏區'
+    ],
+    '屏東縣': [
+        '屏東市', '潮州鎮', '東港鎮', '恆春鎮', '萬丹鄉', '長治鄉', '麟洛鄉', '九如鄉', '里港鄉', '鹽埔鄉', '高樹鄉', '萬巒鄉', '內埔鄉', '竹田鄉', '新埤鄉', '枋寮鄉', '新園鄉', '崁頂鄉', '林邊鄉', '南州鄉', '佳冬鄉', '琉球鄉', '車城鄉', '滿州鄉', '枋山鄉', '霧台鄉', '瑪家鄉', '泰武鄉', '來義鄉', '春日鄉', '獅子鄉', '牡丹鄉', '三地門鄉'
+    ],
+    '宜蘭縣': [
+        '宜蘭市', '羅東鎮', '蘇澳鎮', '頭城鎮', '礁溪鄉', '壯圍鄉', '員山鄉', '冬山鄉', '五結鄉', '三星鄉', '大同鄉', '南澳鄉'
+    ],
+    '花蓮縣': [
+        '花蓮市', '鳳林鎮', '玉里鎮', '新城鄉', '吉安鄉', '壽豐鄉', '秀林鄉', '光復鄉', '豐濱鄉', '瑞穗鄉', '萬榮鄉', '富里鄉', '卓溪鄉'
+    ],
+    '臺東縣': [
+        '臺東市', '成功鎮', '關山鎮', '長濱鄉', '海端鄉', '池上鄉', '東河鄉', '鹿野鄉', '延平鄉', '卑南鄉', '金峰鄉', '大武鄉', '達仁鄉', '綠島鄉', '蘭嶼鄉', '太麻里鄉'
+    ],
+    '澎湖縣': [
+        '馬公市', '湖西鄉', '白沙鄉', '西嶼鄉', '望安鄉', '七美鄉'
+    ],
+    '金門縣': [
+        '金城鎮', '金湖鎮', '金沙鎮', '金寧鄉', '烈嶼鄉', '烏坵鄉'
+    ],
+    '連江縣': [
+        '南竿鄉', '北竿鄉', '莒光鄉', '東引鄉'
+    ]
+        };
+
+        // 初始化下拉選單
+        function initializeSelects() {
+            const citySelect = document.getElementById('citySelect');
+            const districtSelect = document.getElementById('districtSelect');
+
+            // 加入縣市選項
+            Object.keys(taiwanCities).forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city;
+                citySelect.appendChild(option);
+            });
+
+            // 監聽縣市選擇變更
+            citySelect.addEventListener('change', function() {
+                updateDistricts(this.value);
+                toggleConfirmButton();
+            });
+
+            // 監聽地區選擇變更
+            districtSelect.addEventListener('change', function() {
+                toggleConfirmButton();
+            });
+
+            // 初始禁用確認按鈕
+            confirmButton.disabled = true;
+        }
+
+        // 更新地區下拉選單
+        function updateDistricts(selectedCity) {
+            const districtSelect = document.getElementById('districtSelect');
+            districtSelect.innerHTML = '<option value="">選擇地區</option>';
+            
+            if (selectedCity && taiwanCities[selectedCity]) {
+                taiwanCities[selectedCity].forEach(district => {
+                    const option = document.createElement('option');
+                    option.value = district;
+                    option.textContent = district;
+                    districtSelect.appendChild(option);
+                });
+            }
+            
+            // 隱藏表格
+            document.getElementById('cameraTable').style.display = 'none';
+        }
+
+        // 切換確認按鈕的啟用狀態
+        function toggleConfirmButton() {
+            const citySelect = document.getElementById('citySelect');
+            const districtSelect = document.getElementById('districtSelect');
+            const confirmButton = document.getElementById('confirmButton');
+            
+            // 只有當縣市和地區都選擇時才啟用按鈕
+            confirmButton.disabled = !(citySelect.value);
+        }
+
+        // 搜尋測速照相機
+        function searchCameras() {
+            const citySelect = document.getElementById('citySelect');
+            const districtSelect = document.getElementById('districtSelect');
+            const cameraTable = document.getElementById('cameraTable');
+            const cameraTableBody = document.getElementById('cameraTableBody');
+
+            if (!citySelect.value) {
+                alert('請選擇縣市');
+                return;
+            }
+
+            const url = `/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    cameraTableBody.innerHTML = '';
+                    
+                    if (data.length === 0) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = '<td colspan="5" style="text-align: center;">查無資料</td>';
+                        cameraTableBody.appendChild(row);
+                    } else {
+                        data.forEach(camera => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${camera.Addr}</td>
+                                <td>${camera.Limits} km/h</td>
+                                <td>${camera.Direct}</td>
+                                <td>${camera.DeptNm}</td>
+                                <td>${camera.BranchNm}</td>
+                            `;
+                            cameraTableBody.appendChild(row);
+                        });
+                    }
+                    
+                    cameraTable.style.display = 'table';
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('發生錯誤，請稍後再試');
+                });
+        }
+
+        // 當網頁載入時初始化
+        document.addEventListener('DOMContentLoaded', initializeSelects);
+    </script>
+</body>
+</html>
