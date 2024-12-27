@@ -325,20 +325,18 @@ def get_update_history():
     try:
         query = """
         SELECT 
-            uh.Uid,
             uh.CityName,
             uh.RegionName, 
             uh.Addr,
             uh.Direct,
             u.username,
-            uh.update_time
+            uh.Limits
         FROM 
-            update_history uh
+            update uh
             JOIN users u ON uh.Uid = u.Uid
         WHERE 
             uh.Uid = %s
-        ORDER BY 
-            uh.update_time DESC
+       
         """
         cursor.execute(query, (session['user_id'],))
         updates = cursor.fetchall()
