@@ -254,6 +254,9 @@ def update_camera():
 
     data = request.json
     addr = data.get('Addr')
+    city = request.args.get('CityName')
+    region = request.args.get('RegionName')
+    direct = data.get('Direct')
     new_limit = data.get('new_limit')
 
     if not addr or not new_limit:
@@ -272,10 +275,10 @@ def update_camera():
         cursor.execute(update_query, (new_limit, addr))
 
         log_query = """
-        INSERT INTO records (Uid, Addr)
-        VALUES (%s, %s)
+        INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
+        VALUES (%s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(log_query, (session['user_id'], addr))
+        cursor.execute(log_query, (session['user_id'], city, region, addr, direct, new_limit))
         
         conn.commit()
         flash("更新成功", "success")
