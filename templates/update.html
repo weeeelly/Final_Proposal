@@ -189,7 +189,7 @@
         '東區', '北區', '香山區'
     ],
     '苗栗縣': [
-        '苗栗市', '通霄鎮', '苑裡鎮', '竹南鎮', '頭份鎮', '後龍鎮', '卓蘭鎮', '西湖鄉', '頭屋鄉', '公館鄉', '銅鑼鄉', '三義鄉', '造橋鄉', '三灣鄉', '南庄鄉', '大湖鄉', '獅潭���', '泰安鄉'
+        '苗栗市', '通霄鎮', '苑裡鎮', '竹南鎮', '頭份鎮', '後龍鎮', '卓蘭鎮', '西湖鄉', '頭屋鄉', '公館鄉', '銅鑼鄉', '三義鄉', '造橋鄉', '三灣鄉', '南庄鄉', '大湖鄉', '獅潭鄉', '泰安鄉'
     ],
     '臺中市': [
         '中區', '東區', '南區', '西區', '北區', '北屯區', '西屯區', '南屯區', '太平區', '大里區', '霧峰區', '烏日區', '豐原區', '后里區', '東勢區', '石岡區', '新社區', '和平區', '神岡區', '潭子區', '大雅區', '大肚區', '龍井區', '沙鹿區', '梧棲區', '清水區', '大甲區', '外埔區', '大安區'
@@ -204,7 +204,7 @@
         '斗六市', '斗南鎮', '虎尾鎮', '西螺鎮', '土庫鎮', '北港鎮', '莿桐鄉', '林內鄉', '古坑鄉', '大埤鄉', '崙背鄉', '二崙鄉', '麥寮鄉', '臺西鄉', '東勢鄉', '褒忠鄉', '四湖鄉', '口湖鄉', '水林鄉', '元長鄉'
     ],
     '嘉義縣': [
-        '太保市', '朴子市', '布袋��', '大林��', '民雄鄉', '溪口鄉', '新港鄉', '六腳鄉', '東石鄉', '義竹鄉', '鹿草鄉', '水上鄉', '中埔鄉', '竹崎鄉', '梅山鄉', '番路鄉', '大埔鄉', '阿里山鄉'
+        '太保市', '朴子市', '布袋市', '大林鎮', '民雄鄉', '溪口鄉', '新港鄉', '六腳鄉', '東石鄉', '義竹鄉', '鹿草鄉', '水上鄉', '中埔鄉', '竹崎鄉', '梅山鄉', '番路鄉', '大埔鄉', '阿里山鄉'
     ],
     '嘉義市': [
         '東區', '西區'
@@ -238,7 +238,7 @@
     ]
         };
 
-        // 初始化所���下拉選單
+        // 初始化所有下拉選單
         function initializeSelects() {
             const citySelect = document.getElementById('citySelect');
             const districtSelect = document.getElementById('districtSelect');
@@ -267,7 +267,7 @@
                 toggleUpdateButton();
             });
 
-            // 監聽新增用的縣市選擇變��
+            // 監聽新增用的縣市選擇變更
             addCitySelect.addEventListener('change', function() {
                 updateDistricts(this.value, 'addDistrictSelect');
                 toggleAddButton();
@@ -416,21 +416,27 @@
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    return response.json().then(err => {
+                        throw new Error(err.error || '新增失敗');
+                    });
                 }
-                return response.text();
+                return response.json();
             })
             .then(data => {
-                alert('新增成功！');
-                // 重置輸入欄位
-                document.getElementById('newAddr').value = '';
-                document.getElementById('newSpeedLimit').value = '';
-                document.getElementById('newDirection').value = '';
-                // 重新禁用新增按鈕
-                document.getElementById('addButton').disabled = true;
-                // 重新載入測速照相機列表
-                if (document.getElementById('districtSelect').value) {
-                    updateCameraLocations('citySelect', 'districtSelect', 'cameraSelect');
+                if (data.success) {
+                    alert('新增成功！');
+                    // 重置輸入欄位
+                    document.getElementById('newAddr').value = '';
+                    document.getElementById('newSpeedLimit').value = '';
+                    document.getElementById('newDirection').value = '';
+                    // 重新禁用新增按鈕
+                    document.getElementById('addButton').disabled = true;
+                    // 重新載入測速照相機列表
+                    if (document.getElementById('districtSelect').value) {
+                        updateCameraLocations('citySelect', 'districtSelect', 'cameraSelect');
+                    }
+                } else {
+                    throw new Error(data.error || '新增失敗');
                 }
             })
             .catch(error => {
