@@ -170,17 +170,12 @@ def update_page():
 
 @app.route('/add_camera', methods=['POST'])
 def add_camera():
-
     data = request.json
     city = data.get('CityName')
     region = data.get('RegionName')
     addr = data.get('Addr')
     limits = data.get('Limits')
     direction = data.get('Direct')
-
-    if not city or not region or not addr or not limits or not direction:
-        flash("請提供完整的測速照相地點資訊", "danger")
-        return redirect("/update")
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -204,56 +199,52 @@ def add_camera():
         cursor.execute(log_query, (session['user_id'], city, region, addr, direction, limits))
         
         conn.commit()
-        flash("新增成功", "success")
-        return redirect("/update")
+        flash("新增成功！", "success")
     except Exception as e:
         conn.rollback()
         flash(f"新增失敗: {str(e)}", "danger")
-        return redirect("/update")
     finally:
         cursor.close()
         conn.close()
 
+    return redirect("/update")
+
 @app.route('/delete_camera', methods=['POST'])
 def delete_camera():
-
     data = request.json
     city = data.get('CityName')
     region = data.get('RegionName')
     addr = data.get('Addr')
-    limits = data.get('Limits')
-    direction = data.get('Direct')
-
-    if not addr:
-        flash("請提供地址", "danger")
-        return redirect("/update")
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
+        # 執行刪除操作
         delete_query = """
         DELETE FROM camera
         WHERE Addr = %s
         """
         cursor.execute(delete_query, (addr,))
-
-        log_query = """
-        INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
-        VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(log_query, (session['user_id'], city, region, addr, direction, limits))
-        
-        conn.commit()
-        flash("刪除成功", "success")
-        return redirect("/update")
+        if cursor.rowcount == 0:  # 確認是否有刪除成功
+            flash("刪除失敗：找不到指定地址", "danger")
+        else:
+            # 記錄刪除操作
+            log_query = """
+            INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            """
+            cursor.execute(log_query, (session['user_id'], city, region, addr))
+            conn.commit()
+            flash("刪除成功", "success")
     except Exception as e:
         conn.rollback()
-        flash(f"刪除失敗: {str(e)}", "danger")
-        return redirect("/update")
+        flash(f"刪除失敗：{str(e)}", "danger")
     finally:
         cursor.close()
         conn.close()
+
+    return redirect("/update")
 
 @app.route('/update_camera', methods=['POST'])
 def update_camera():
