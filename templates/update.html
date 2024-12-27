@@ -106,6 +106,21 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
+        .flash-messages {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+
+        .flash-messages .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .flash-messages .danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
     </style>
 </head>
 <body>
@@ -165,6 +180,17 @@
 
     <div class="button-section">
         <button onclick="window.location.href='/'">Home</button>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        {% endwith %}
     </div>
 
     <script>
