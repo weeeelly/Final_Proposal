@@ -175,6 +175,10 @@
             <option value="">選擇地址</option>
         </select>
         
+        <select id="deleteDirectionSelect" class="form-control">
+            <option value="">選擇方向</option>
+        </select>
+        
         <button class="update-button" onclick="deleteCamera()" id="deleteButton" disabled>刪除</button>
     </div>
 
@@ -245,7 +249,7 @@
         '屏東市', '潮州鎮', '東港鎮', '恆春鎮', '萬丹鄉', '長治鄉', '麟洛鄉', '九如鄉', '里港鄉', '鹽埔鄉', '高樹鄉', '萬巒鄉', '內埔鄉', '竹田鄉', '新埤鄉', '枋寮鄉', '新園鄉', '崁頂鄉', '林邊鄉', '南州鄉', '佳冬鄉', '琉球鄉', '車城鄉', '滿州鄉', '枋山鄉', '霧台鄉', '瑪家鄉', '泰武鄉', '來義鄉', '春日鄉', '獅子鄉', '牡丹鄉', '三地門鄉'
     ],
     '宜蘭縣': [
-        '宜蘭市', '羅東鎮', '蘇澳鎮', '頭城鎮', '礁溪鄉', '壯圍鄉', '員山鄉', '冬山鄉', '五結鄉', '三星鄉', '大同鄉', '南澳鄉'
+        '宜蘭市', '羅東鎮', '蘇澳鎮', '頭城鎮', '礁溪鄉', '壯圍鄉', '員山鄉', '冬山鄉', '���結鄉', '三星鄉', '大同鄉', '南澳鄉'
     ],
     '花蓮縣': [
         '花蓮市', '鳳林鎮', '玉里鎮', '新城鄉', '吉安鄉', '壽豐鄉', '秀林鄉', '光復鄉', '豐濱鄉', '瑞穗鄉', '萬榮鄉', '富里鄉', '卓溪鄉'
@@ -499,6 +503,7 @@
             const citySelect = document.getElementById('deleteCitySelect');
             const districtSelect = document.getElementById('deleteDistrictSelect');
             const addressSelect = document.getElementById('deleteAddressSelect');
+            const directionSelect = document.getElementById('deleteDirectionSelect');
 
             if (citySelect.value && districtSelect.value) {
                 fetch(`/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`)
@@ -506,10 +511,23 @@
                     .then(data => {
                         addressSelect.innerHTML = '<option value="">選擇地址</option>';
                         
+                        // 創建一個地址到方向的映射
+                        const addressDirections = new Map();
                         data.forEach(camera => {
+                            if (!addressDirections.has(camera.Addr)) {
+                                addressDirections.set(camera.Addr, []);
+                            }
+                            addressDirections.get(camera.Addr).push({
+                                direction: camera.Direct,
+                                limits: camera.Limits
+                            });
+                        });
+
+                        // 填充地址下拉選單
+                        addressDirections.forEach((directions, addr) => {
                             const option = document.createElement('option');
-                            option.value = camera.Addr;
-                            option.textContent = `${camera.Addr} - 速限:${camera.Limits}km/h - 方向:${camera.Direct}`;
+                            option.value = addr;
+                            option.textContent = addr;
                             addressSelect.appendChild(option);
                         });
                     })
@@ -522,9 +540,15 @@
             const citySelect = document.getElementById('deleteCitySelect');
             const districtSelect = document.getElementById('deleteDistrictSelect');
             const addressSelect = document.getElementById('deleteAddressSelect');
+            const directionSelect = document.getElementById('deleteDirectionSelect');
             const deleteButton = document.getElementById('deleteButton');
 
-            deleteButton.disabled = !(citySelect.value && districtSelect.value && addressSelect.value);
+            deleteButton.disabled = !(
+                citySelect.value && 
+                districtSelect.value && 
+                addressSelect.value &&
+                directionSelect.value
+            );
         }
 
         // Delete camera
@@ -647,6 +671,37 @@
                 alert('更新失敗，請稍後再試');
             });
         }
+
+        // 添加地址選擇變更事件來更新方向下拉選單
+        document.getElementById('deleteAddressSelect').addEventListener('change', function() {
+            const citySelect = document.getElementById('deleteCitySelect');
+            const districtSelect = document.getElementById('deleteDistrictSelect');
+            const directionSelect = document.getElementById('deleteDirectionSelect');
+            
+            if (this.value) {
+                fetch(`/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        directionSelect.innerHTML = '<option value="">選擇方向</option>';
+                        
+                        // 找出選定地址的所有方向
+                        const cameras = data.filter(camera => camera.Addr === this.value);
+                        cameras.forEach(camera => {
+                            const option = document.createElement('option');
+                            option.value = camera.Direct;
+                            option.textContent = `${camera.Direct} (速限: ${camera.Limits}km/h)`;
+                            directionSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else {
+                directionSelect.innerHTML = '<option value="">選擇方向</option>';
+            }
+            toggleDeleteButton();
+        });
+
+        // 添加方向選擇的變更事件監聽器
+        document.getElementById('deleteDirectionSelect').addEventListener('change', toggleDeleteButton);
     </script>
 </body>
 </html>
