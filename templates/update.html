@@ -264,7 +264,7 @@
     ]
         };
 
-        // 初始化所���下拉選單
+        // 初始化所有下拉選單
         function initializeSelects() {
             const citySelect = document.getElementById('citySelect');
             const districtSelect = document.getElementById('districtSelect');
@@ -529,10 +529,27 @@
 
         // Delete camera
         function deleteCamera() {
+            const addr = document.getElementById('deleteAddressSelect').value;
+            const direction = document.getElementById('deleteDirectionSelect').value;
+            const citySelect = document.getElementById('deleteCitySelect');
+            const districtSelect = document.getElementById('deleteDistrictSelect');
+
+            if (!addr || !direction) {
+                alert('請選擇地址和方向');
+                return;
+            }
+
+            // 從選中的相機選項中獲取速限
+            const selectedOption = document.getElementById('deleteAddressSelect').options[document.getElementById('deleteAddressSelect').selectedIndex];
+            const limitsMatch = selectedOption.textContent.match(/速限:(\d+)km\/h/);
+            const limits = limitsMatch ? limitsMatch[1] : '';
+
             const data = {
-                CityName: document.getElementById('deleteCitySelect').value,
-                RegionName: document.getElementById('deleteDistrictSelect').value,
-                Addr: document.getElementById('deleteAddressSelect').value
+                CityName: citySelect.value,
+                RegionName: districtSelect.value,
+                Addr: addr,
+                Direct: direction,
+                Limits: limits
             };
 
             fetch('/delete_camera', {
@@ -542,21 +559,25 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    alert(data.error);
-                } else {
-                    alert('刪除成功！');
-                    // Reload addresses
-                    updateAddresses();
-                    // Disable delete button
-                    document.getElementById('deleteButton').disabled = true;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
                 }
+                return response.text();
+            })
+            .then(data => {
+                alert('刪除成功！');
+                // 重置選擇
+                document.getElementById('deleteAddressSelect').value = '';
+                document.getElementById('deleteDirectionSelect').value = '';
+                // 重新禁用刪除按鈕
+                document.getElementById('deleteButton').disabled = true;
+                // 重新載入地址列表
+                updateAddresses();
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('發生錯誤，請稍後再試');
+                alert('刪除失敗，請稍後再試');
             });
         }
 
@@ -574,16 +595,26 @@
 
         // 在 script 標籤中添加 updateCamera 函數
         function updateCamera() {
-            const addr = document.getElementById('cameraSelect').value;
+            const citySelect = document.getElementById('citySelect');
+            const districtSelect = document.getElementById('districtSelect');
+            const cameraSelect = document.getElementById('cameraSelect');
             const newLimit = document.getElementById('newLimit').value;
 
-            if (!addr || !newLimit) {
+            // 從選中的相機選項中獲取方向
+            const selectedOption = cameraSelect.options[cameraSelect.selectedIndex];
+            const directionMatch = selectedOption.textContent.match(/方向:(.+)$/);
+            const direction = directionMatch ? directionMatch[1].trim() : '';
+
+            if (!cameraSelect.value || !newLimit) {
                 alert('請選擇地址和輸入新速限');
                 return;
             }
 
             const data = {
-                Addr: addr,
+                CityName: citySelect.value,
+                RegionName: districtSelect.value,
+                Addr: cameraSelect.value,
+                Direct: direction,
                 new_limit: newLimit
             };
 
