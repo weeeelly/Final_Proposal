@@ -198,7 +198,7 @@ def add_camera():
 
         # 記錄操作到 update table，包含 Limits
         log_query = """
-        INSERT INTO `update` (uid, CityName, RegionName, Addr, Direct, Limits)
+        INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
         VALUES (%s, %s, %s, %s, %s, %s)
         """
         cursor.execute(log_query, (session['user_id'], city, region, addr, direction, limits))
@@ -244,7 +244,7 @@ def delete_camera():
 
         # 記錄操作到 update table，包含 Limits
         log_query = """
-        INSERT INTO `update` (uid, CityName, RegionName, Addr, Direct, Limits)
+        INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
         VALUES (%s, %s, %s, %s, %s, %s)
         """
         cursor.execute(log_query, (session['user_id'], city, region, addr, direction, limits))
@@ -291,7 +291,7 @@ def update_camera():
 
         # 記錄操作到 update table，包含新的 Limits
         log_query = """
-        INSERT INTO `update` (uid, CityName, RegionName, Addr, Direct, Limits)
+        INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
         VALUES (%s, %s, %s, %s, %s, %s)
         """
         cursor.execute(log_query, (session['user_id'], city, region, addr, direction, new_limit))
@@ -332,7 +332,7 @@ def get_update_history():
             u.username,
             uh.Limits
         FROM 
-            update uh
+            records uh
             JOIN users u ON uh.Uid = u.Uid
         WHERE 
             uh.Uid = %s
