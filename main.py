@@ -170,9 +170,6 @@ def update_page():
 
 @app.route('/add_camera', methods=['POST'])
 def add_camera():
-    if 'user_id' not in session:
-        flash("請先登入", "warning")
-        return redirect("/update")
 
     data = request.json
     city = data.get('CityName')
@@ -181,7 +178,7 @@ def add_camera():
     limits = data.get('Limits')
     direction = data.get('Direct')
 
-    if not all([city, region, addr, limits, direction]):
+    if not city or not region or not addr or not limits or not direction:
         flash("請提供完整的測速照相地點資訊", "danger")
         return redirect("/update")
 
@@ -189,25 +186,23 @@ def add_camera():
     cursor = conn.cursor()
 
     try:
-        # 新增攝影機資料
         insert_query_camera = """
         INSERT INTO camera (Addr, Direct, Limits)
         VALUES (%s, %s, %s)
         """
         insert_query_ps = """
-        INSERT INTO ps (CityName, RegionName, Limits, DeptNm, BranchNm)
+        INSERT INTO ps (CityName, RegionName, Addr, DeptNm, BranchNm)
         VALUES (%s, %s, %s, %s, %s)
         """
         cursor.execute(insert_query_camera, (addr, direction, limits))
-        cursor.execute(insert_query_ps, (city, region, limits, '他人新增', '他人新增'))
+        cursor.execute(insert_query_ps, (city, region, addr, '他人新增', '他人新增'))
 
-        # 記錄操作到 update table，包含 Limits
         log_query = """
         INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
         VALUES (%s, %s, %s, %s, %s, %s)
         """
         cursor.execute(log_query, (session['user_id'], city, region, addr, direction, limits))
-    
+        
         conn.commit()
         flash("新增成功", "success")
         return redirect("/update")
@@ -221,16 +216,13 @@ def add_camera():
 
 @app.route('/delete_camera', methods=['POST'])
 def delete_camera():
-    if 'user_id' not in session:
-        flash("請先登入", "warning")
-        return redirect("/update")
 
     data = request.json
-    addr = data.get('Addr')
     city = data.get('CityName')
     region = data.get('RegionName')
-    direction = data.get('Direct')
+    addr = data.get('Addr')
     limits = data.get('Limits')
+    direction = data.get('Direct')
 
     if not addr:
         flash("請提供地址", "danger")
@@ -240,14 +232,12 @@ def delete_camera():
     cursor = conn.cursor()
 
     try:
-        # 刪除攝影機資料
         delete_query = """
         DELETE FROM camera
         WHERE Addr = %s
         """
         cursor.execute(delete_query, (addr,))
 
-        # 記錄操作到 update table，包含 Limits
         log_query = """
         INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
         VALUES (%s, %s, %s, %s, %s, %s)
@@ -273,20 +263,19 @@ def update_camera():
 
     data = request.json
     addr = data.get('Addr')
-    city = data.get('CityName')
-    region = data.get('RegionName')
-    direction = data.get('Direct')
+    city = request.args.get('CityName')
+    region = request.args.get('RegionName')
+    direct = data.get('Direct')
     new_limit = data.get('new_limit')
 
-    if not all([addr, new_limit]):
-        flash("請提供完整的更新資訊", "danger")
+    if not addr or not new_limit:
+        flash("請提供地址和新速限", "danger")
         return redirect("/update")
 
     conn = get_db_connection()
     cursor = conn.cursor()
 
     try:
-        # 更新攝影機資料
         update_query = """
         UPDATE camera
         SET Limits = %s
@@ -294,12 +283,11 @@ def update_camera():
         """
         cursor.execute(update_query, (new_limit, addr))
 
-        # 記錄操作到 update table，包含新的 Limits
         log_query = """
         INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
         VALUES (%s, %s, %s, %s, %s, %s)
         """
-        cursor.execute(log_query, (session['user_id'], city, region, addr, direction, new_limit))
+        cursor.execute(log_query, (session['user_id'], city, region, addr, direct, new_limit))
         
         conn.commit()
         flash("更新成功", "success")
@@ -311,6 +299,7 @@ def update_camera():
     finally:
         cursor.close()
         conn.close()
+
 
 @app.route('/history')
 def history():
@@ -351,7 +340,5 @@ def get_update_history():
     finally:
         cursor.close()
         conn.close()
-
-
 if __name__ == '__main__':
     app.run(debug=True)
