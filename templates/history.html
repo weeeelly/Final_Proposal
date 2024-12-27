@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>更新歷史記錄</title>
+    <title>Update History</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -94,7 +94,7 @@
 </head>
 <body>
     <div class="header">
-        <h1>更新歷史記錄</h1>
+        <h1>Update History</h1>
     </div>
 
     <div class="content">
@@ -131,7 +131,7 @@
     <script>
         // 當頁面載入時獲取歷史記錄
         document.addEventListener('DOMContentLoaded', function() {
-            fetch('/update_history')
+            fetch('/get_update_history')
                 .then(response => response.json())
                 .then(data => {
                     const tableBody = document.getElementById('historyTableBody');
@@ -147,7 +147,10 @@
                         tableBody.appendChild(row);
                     });
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('獲取歷史記錄失敗，請稍後再試');
+                });
         });
     </script>
 </body>
