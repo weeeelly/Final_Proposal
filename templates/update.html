@@ -160,10 +160,6 @@
             <option value="">選擇地址</option>
         </select>
         
-        <select id="deleteDirectionSelect" class="form-control">
-            <option value="">選擇方向</option>
-        </select>
-        
         <button class="update-button" onclick="deleteCamera()" id="deleteButton" disabled>刪除</button>
     </div>
 
@@ -193,7 +189,7 @@
         '東區', '北區', '香山區'
     ],
     '苗栗縣': [
-        '苗栗市', '通霄鎮', '苑裡鎮', '竹南鎮', '頭份鎮', '後龍鎮', '卓蘭鎮', '西湖鄉', '頭屋鄉', '公館鄉', '銅鑼鄉', '三義鄉', '造橋鄉', '三灣鄉', '南庄鄉', '大湖鄉', '獅潭鄉', '泰安鄉'
+        '苗栗市', '通霄鎮', '苑裡鎮', '竹南鎮', '頭份鎮', '後龍鎮', '卓蘭鎮', '西湖鄉', '頭屋鄉', '公館鄉', '銅鑼鄉', '三義鄉', '造橋鄉', '三灣鄉', '南庄鄉', '大湖鄉', '獅潭���', '泰安鄉'
     ],
     '臺中市': [
         '中區', '東區', '南區', '西區', '北區', '北屯區', '西屯區', '南屯區', '太平區', '大里區', '霧峰區', '烏日區', '豐原區', '后里區', '東勢區', '石岡區', '新社區', '和平區', '神岡區', '潭子區', '大雅區', '大肚區', '龍井區', '沙鹿區', '梧棲區', '清水區', '大甲區', '外埔區', '大安區'
@@ -208,7 +204,7 @@
         '斗六市', '斗南鎮', '虎尾鎮', '西螺鎮', '土庫鎮', '北港鎮', '莿桐鄉', '林內鄉', '古坑鄉', '大埤鄉', '崙背鄉', '二崙鄉', '麥寮鄉', '臺西鄉', '東勢鄉', '褒忠鄉', '四湖鄉', '口湖鄉', '水林鄉', '元長鄉'
     ],
     '嘉義縣': [
-        '太保市', '朴子市', '布袋市', '大林鎮', '民雄鄉', '溪口鄉', '新港鄉', '六腳鄉', '東石鄉', '義竹鄉', '鹿草鄉', '水上鄉', '中埔鄉', '竹崎鄉', '梅山鄉', '番路鄉', '大埔鄉', '阿里山鄉'
+        '太保市', '朴子市', '布袋鎮', '大林鎮', '民雄鄉', '溪口鄉', '新港鄉', '六腳鄉', '東石鄉', '義竹鄉', '鹿草鄉', '水上鄉', '中埔鄉', '竹崎鄉', '梅山鄉', '番路鄉', '大埔鄉', '阿里山鄉'
     ],
     '嘉義市': [
         '東區', '西區'
@@ -284,7 +280,7 @@
             document.getElementById('newDirection').addEventListener('input', toggleAddButton);
         }
 
-        // Toggle update button state
+        // 切換更新按鈕狀態
         function toggleUpdateButton() {
             const citySelect = document.getElementById('citySelect');
             const districtSelect = document.getElementById('districtSelect');
@@ -292,7 +288,6 @@
             const newLimit = document.getElementById('newLimit');
             const updateButton = document.getElementById('updateButton');
 
-            // Enable the button only if all fields are filled and valid
             updateButton.disabled = !(
                 citySelect.value && 
                 districtSelect.value && 
@@ -392,23 +387,12 @@
 
         // 新增測速照相機
         function addCamera() {
-            const cityName = document.getElementById('addCitySelect').value;
-            const regionName = document.getElementById('addDistrictSelect').value;
-            const addr = document.getElementById('newAddr').value.trim();
-            const limits = document.getElementById('newSpeedLimit').value;
-            const direction = document.getElementById('newDirection').value.trim();
-
-            if (!cityName || !regionName || !addr || !limits || !direction) {
-                alert('請填寫所有必要欄位');
-                return;
-            }
-
             const data = {
-                CityName: cityName,
-                RegionName: regionName,
-                Addr: addr,
-                Limits: limits,
-                Direct: direction
+                CityName: document.getElementById('addCitySelect').value,
+                RegionName: document.getElementById('addDistrictSelect').value,
+                Addr: document.getElementById('newAddr').value.trim(),
+                Limits: document.getElementById('newSpeedLimit').value,
+                Direct: document.getElementById('newDirection').value.trim()
             };
 
             fetch('/add_camera', {
@@ -418,34 +402,27 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => {
-                        throw new Error(err.error || '新增失敗');
-                    });
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                if (data.success) {
+                if (data.error) {
+                    alert(data.error);
+                } else {
                     alert('新增成功！');
-                    // 重置輸入欄位
+                    // 清空輸入欄位
                     document.getElementById('newAddr').value = '';
                     document.getElementById('newSpeedLimit').value = '';
                     document.getElementById('newDirection').value = '';
-                    // 重新禁用新增按鈕
+                    // 重新禁用按鈕
                     document.getElementById('addButton').disabled = true;
                     // 重新載入測速照相機列表
                     if (document.getElementById('districtSelect').value) {
-                        updateCameraLocations('citySelect', 'districtSelect', 'cameraSelect');
+                        fetchCameras();
                     }
-                } else {
-                    throw new Error(data.error || '新增失敗');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('新增失敗，請稍後再試');
+                alert('發生錯誤，請稍後再試');
             });
         }
 
@@ -483,7 +460,6 @@
             const citySelect = document.getElementById('deleteCitySelect');
             const districtSelect = document.getElementById('deleteDistrictSelect');
             const addressSelect = document.getElementById('deleteAddressSelect');
-            const directionSelect = document.getElementById('deleteDirectionSelect');
 
             if (citySelect.value && districtSelect.value) {
                 fetch(`/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`)
@@ -491,92 +467,33 @@
                     .then(data => {
                         addressSelect.innerHTML = '<option value="">選擇地址</option>';
                         
-                        // 創建一個地址到方向的映射
-                        const addressDirections = new Map();
                         data.forEach(camera => {
-                            if (!addressDirections.has(camera.Addr)) {
-                                addressDirections.set(camera.Addr, new Set());
-                            }
-                            addressDirections.get(camera.Addr).add(camera.Direct);
-                        });
-
-                        // 填充地址下拉選單
-                        addressDirections.forEach((directions, addr) => {
                             const option = document.createElement('option');
-                            option.value = addr;
-                            option.textContent = addr;
+                            option.value = camera.Addr;
+                            option.textContent = `${camera.Addr} - 速限:${camera.Limits}km/h - 方向:${camera.Direct}`;
                             addressSelect.appendChild(option);
                         });
-
-                        // 清空方向下拉選單
-                        directionSelect.innerHTML = '<option value="">選擇方向</option>';
                     })
                     .catch(error => console.error('Error:', error));
             }
         }
 
-        // 當選擇地址時更新方向下拉選單
-        document.getElementById('deleteAddressSelect').addEventListener('change', function() {
-            const citySelect = document.getElementById('deleteCitySelect');
-            const districtSelect = document.getElementById('deleteDistrictSelect');
-            const directionSelect = document.getElementById('deleteDirectionSelect');
-            const selectedAddr = this.value;
-
-            if (selectedAddr) {
-                fetch(`/get_cameras?CityName=${encodeURIComponent(citySelect.value)}&RegionName=${encodeURIComponent(districtSelect.value)}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        directionSelect.innerHTML = '<option value="">選擇方向</option>';
-                        
-                        // 找出選定地址的所有方向
-                        const directions = data
-                            .filter(camera => camera.Addr === selectedAddr)
-                            .map(camera => camera.Direct);
-
-                        // 填充方向下拉選單
-                        directions.forEach(direction => {
-                            const option = document.createElement('option');
-                            option.value = direction;
-                            option.textContent = direction;
-                            directionSelect.appendChild(option);
-                        });
-                    })
-                    .catch(error => console.error('Error:', error));
-            } else {
-                directionSelect.innerHTML = '<option value="">選擇方向</option>';
-            }
-            toggleDeleteButton();
-        });
-
-        // 修改切換刪除按鈕狀態的函數
+        // Toggle delete button state
         function toggleDeleteButton() {
             const citySelect = document.getElementById('deleteCitySelect');
             const districtSelect = document.getElementById('deleteDistrictSelect');
             const addressSelect = document.getElementById('deleteAddressSelect');
-            const directionSelect = document.getElementById('deleteDirectionSelect');
             const deleteButton = document.getElementById('deleteButton');
 
-            deleteButton.disabled = !(
-                citySelect.value && 
-                districtSelect.value && 
-                addressSelect.value &&
-                directionSelect.value
-            );
+            deleteButton.disabled = !(citySelect.value && districtSelect.value && addressSelect.value);
         }
 
-        // 修改刪除函數
+        // Delete camera
         function deleteCamera() {
-            const addr = document.getElementById('deleteAddressSelect').value;
-            const direction = document.getElementById('deleteDirectionSelect').value;
-
-            if (!addr || !direction) {
-                alert('請選擇地址和方向');
-                return;
-            }
-
             const data = {
-                Addr: addr,
-                Direct: direction
+                CityName: document.getElementById('deleteCitySelect').value,
+                RegionName: document.getElementById('deleteDistrictSelect').value,
+                Addr: document.getElementById('deleteAddressSelect').value
             };
 
             fetch('/delete_camera', {
@@ -586,87 +503,29 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
+            .then(response => response.json())
             .then(data => {
-                alert('刪除成功！');
-                // 重置選擇
-                document.getElementById('deleteAddressSelect').value = '';
-                document.getElementById('deleteDirectionSelect').value = '';
-                // 重新禁用刪除按鈕
-                document.getElementById('deleteButton').disabled = true;
-                // 重新載入地址列表
-                updateAddresses();
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    alert('刪除成功！');
+                    // Reload addresses
+                    updateAddresses();
+                    // Disable delete button
+                    document.getElementById('deleteButton').disabled = true;
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('刪除失敗，請稍後再試');
+                alert('發生錯誤，請稍後再試');
             });
         }
-
-        // 添加方向選單的變更監聽器
-        document.getElementById('deleteDirectionSelect').addEventListener('change', toggleDeleteButton);
 
         // Initialize all selects on page load
         document.addEventListener('DOMContentLoaded', function() {
             initializeSelects();
             initializeDeleteSelects();
-
-            // Add event listeners to update button state
-            document.getElementById('citySelect').addEventListener('change', toggleUpdateButton);
-            document.getElementById('districtSelect').addEventListener('change', toggleUpdateButton);
-            document.getElementById('cameraSelect').addEventListener('change', toggleUpdateButton);
-            document.getElementById('newLimit').addEventListener('input', toggleUpdateButton);
         });
-
-        // 在 script 標籤中添加 updateCamera 函數
-        function updateCamera() {
-            const addr = document.getElementById('cameraSelect').value;
-            const newLimit = document.getElementById('newLimit').value;
-
-            if (!addr || !newLimit) {
-                alert('請選擇地址和輸入新速限');
-                return;
-            }
-
-            const data = {
-                Addr: addr,
-                new_limit: newLimit
-            };
-
-            fetch('/update_camera', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(data)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.text();
-            })
-            .then(data => {
-                alert('更新成功！');
-                // 重置輸入欄位
-                document.getElementById('newLimit').value = '';
-                // 重新禁用更新按鈕
-                document.getElementById('updateButton').disabled = true;
-                // 重新載入測速照相機列表
-                if (document.getElementById('districtSelect').value) {
-                    updateCameraLocations('citySelect', 'districtSelect', 'cameraSelect');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('更新失敗，請稍後再試');
-            });
-        }
     </script>
 </body>
 </html>
