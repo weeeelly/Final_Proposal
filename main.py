@@ -215,7 +215,8 @@ def delete_camera():
     city = data.get('CityName')
     region = data.get('RegionName')
     addr = data.get('Addr')
-
+    limits = data.get('Limits')
+    direction = data.get('Direct')
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -225,7 +226,7 @@ def delete_camera():
         DELETE FROM camera
         WHERE Addr = %s AND Direct = %s
         """
-        cursor.execute(delete_query, (addr,))
+        cursor.execute(delete_query, (addr, direction))
         if cursor.rowcount == 0:  # 確認是否有刪除成功
             flash("刪除失敗：找不到指定地址", "danger")
         else:
@@ -234,7 +235,7 @@ def delete_camera():
             INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
             VALUES (%s, %s, %s, %s, %s, %s)
             """
-            cursor.execute(log_query, (session['user_id'], city, region, addr))
+            cursor.execute(log_query, (session['user_id'], city, region, addr, direction, limits))
             conn.commit()
             flash("刪除成功", "success")
     except Exception as e:
