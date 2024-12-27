@@ -215,7 +215,6 @@ def delete_camera():
     city = data.get('CityName')
     region = data.get('RegionName')
     addr = data.get('Addr')
-    limits = data.get('Limits')
     direction = data.get('Direct')
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -232,10 +231,10 @@ def delete_camera():
         else:
             # 記錄刪除操作
             log_query = """
-            INSERT INTO records (Uid, CityName, RegionName, Addr, Direct, Limits)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO records (Uid, CityName, RegionName, Addr, Direct)
+            VALUES (%s, %s, %s, %s, %s)
             """
-            cursor.execute(log_query, (session['user_id'], city, region, addr, direction, limits))
+            cursor.execute(log_query, (session['user_id'], city, region, addr, direction))
             conn.commit()
             flash("刪除成功", "success")
     except Exception as e:
@@ -255,8 +254,8 @@ def update_camera():
 
     data = request.json
     addr = data.get('Addr')
-    city = request.args.get('CityName')
-    region = request.args.get('RegionName')
+    city = data.get('CityName')
+    region = data.get('RegionName')
     direct = data.get('Direct')
     new_limit = data.get('new_limit')
 
