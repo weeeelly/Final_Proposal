@@ -223,7 +223,7 @@ def delete_camera():
         # 執行刪除操作
         delete_query = """
         DELETE FROM camera
-        WHERE Addr = %s
+        WHERE Addr = %s AND Direct = %s
         """
         cursor.execute(delete_query, (addr,))
         if cursor.rowcount == 0:  # 確認是否有刪除成功
