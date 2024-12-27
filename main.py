@@ -321,5 +321,5 @@ def get_update_history():
         cursor.close()
         conn.close()
 
-if __name__ == '_＿main_＿':
+if __name__ == '__main__':
     app.run(debug=True)
