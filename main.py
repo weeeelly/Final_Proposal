@@ -190,11 +190,16 @@ def add_camera():
 
     try:
         # 新增攝影機資料
-        insert_query = """
-        INSERT INTO camera (CityName, RegionName, Addr, Limits, Direct)
+        insert_query_camera = """
+        INSERT INTO camera (Addr, Direct, Limits)
+        VALUES (%s, %s, %s)
+        """
+        insert_query_ps = """
+        INSERT INTO ps (CityName, RegionName, Limits, DeptNm, BranchNm)
         VALUES (%s, %s, %s, %s, %s)
         """
-        cursor.execute(insert_query, (city, region, addr, limits, direction))
+        cursor.execute(insert_query_camera, (addr, direction, limits))
+        cursor.execute(insert_query_ps, (city, region, limits, '他人新增', '他人新增'))
 
         # 記錄操作到 update table，包含 Limits
         log_query = """
@@ -202,7 +207,7 @@ def add_camera():
         VALUES (%s, %s, %s, %s, %s, %s)
         """
         cursor.execute(log_query, (session['user_id'], city, region, addr, direction, limits))
-        
+    
         conn.commit()
         flash("新增成功", "success")
         return redirect("/update")
